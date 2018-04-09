@@ -17,5 +17,9 @@ articles_df, comments_df = get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper
 ```
 For more information, please refer to the [tutorial here](https://github.com/AashitaK/nyt-comments/blob/master/Tutorial.ipynb).
 
+## Acknowledgement:
+* A part of code used in the function `get_comments` is inspired from the code written by [Neal Caren](http://nealcaren.web.unc.edu/scraping-comments-from-the-new-york-times/) with some modification.
+* NYT article search API is used for the article search.
+
 
 
