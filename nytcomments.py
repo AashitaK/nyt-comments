@@ -10,14 +10,14 @@ import pandas as pd
 NYT_ARTICLE_API_URL = 'https://api.nytimes.com/svc/search/v2/articlesearch.json'
 COMMENTS_URL = 'http://www.nytimes.com/svc/community/V3/requestHandler?callback=NYTD.commentsInstance.drawComments&method=&cmd=GetCommentsAll&url='
 
-def get_comments(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, end_date=None, 
+def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, end_date=None, 
                  max_comments=50000, sort='newest', query=None, save=False, printout=True):
     '''Collects the comments on the articles of NYT by first scraping the 
     articles using NYT articles search API, calling on the customized function
-    scrap_comments(url) to get comments on each article, processing the comments' 
+    get_comments(url) to get comments on each article, processing the comments' 
     and articles' data and returning two pandas dataframes - one each for articles 
     and comments.'''
-
+    
     params = {'api-key': ARTICLE_API_KEY}
     
     if sort=='oldest':
@@ -69,12 +69,13 @@ def get_comments(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, 
                 docs_length = len(docs)
                 if docs_length==0:
                     if printout:
-                        print("No comments found on page", page)
+                        print("No aricles found on page", page)
                     break
                 for i in range(docs_length):
                     if docs[i]['document_type'] != 'multimedia': # Ignore multimedia articles
                         article_url = docs[i]['web_url'] # Get the url for the article
-                        comments, number_comments = scrap_comments(article_url) # Use the article url to get comments 
+                        comments, number_comments = get_comments(article_url) # Use the article url to get comments 
+                        total_comments += number_comments
                         if not comments.empty: # Check if the article has comments
                             if printout:
                                 print("Article url:", article_url)
@@ -103,14 +104,16 @@ def get_comments(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, 
                 print("begin_date is bigger than the end_date. No articles returned.")
             else:
                 print("Total articles stored: ", articles_df.shape[0])
+                print("Total comments retrieved: ", comments_df.shape[0])
         else:
             print("Total articles stored: ", articles_df.shape[0])
+            print("Total comments retrieved: ", comments_df.shape[0])
     if save:
         articles_df.to_csv('Articles.csv')
         comments_df.to_csv('Comments.csv')
-    return articles_df, comments_df    
+    return articles_df, comments_df 
         
-def scrap_comments(article_url):
+def get_comments(article_url):
     '''Given the url of an articles from NYT, returns a dataframe of comments in that article'''
     
     article_url = article_url.replace(':','%253A') #convert the : to an HTML entity
@@ -141,28 +144,93 @@ def scrap_comments(article_url):
                 break # Break when no comments are returned
         offset = offset + 25 # Increment the counter since 25 comments are scraped each time
     if total_comments: 
-        print('Found ' + str(total_comments) + ' comments')
+        print('Retrieved ' + str(total_comments) + ' comments')
         comments_df = pd.concat([df for df in df_list])
         comments_df.drop_duplicates(subset=['commentID'], inplace=True)
         comments_df['inReplyTo'] = None 
         comments_df = get_replies(comments_df)
     return comments_df, total_comments
 
-def get_replies(df):
-    '''Extracts the replies to the comments and returns the dataframe
-    including the replies as comments'''
-    if 'replyCount' in df.columns:
-        selected_df = df.loc[df.replyCount>0]
-        if selected_df.shape[0] > 0:
-            df_list = []
-            for idx, row in selected_df.iterrows():
-                replies_df = pd.DataFrame(row.replies)
-                replies_df['inReplyTo'] = row.commentID
-                df_list.append(replies_df)
-            all_replies_df = pd.concat([replies_df for replies_df in df_list])
-            all_replies_df = get_replies(all_replies_df)
-            df = pd.concat([df, all_replies_df])
-    return df
+def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, end_date=None, 
+                 max_articles=100000, sort='newest', query=None, save=False, printout=True):
+    '''Collects the data on the articles of NYT using NYT articles search API, processes the 
+    articles' data and returns a pandas dataframe for articles.'''
+    
+    params = {'api-key': ARTICLE_API_KEY}
+    
+    if sort=='oldest':
+        if begin_date is None:
+            begin_date = '20081030'   
+    elif end_date is None:
+        end_date = datetime.today().strftime('%Y%m%d')
+        
+    if begin_date: # Check begin_date is not None
+        try:
+            begin_date = pd.to_datetime(begin_date, errors='coerce').strftime('%Y%m%d')
+        except:
+            print("Error: Please try again with begin_date entered in the format %Y%m%d.")
+        params['begin_date'] = begin_date 
+
+    if end_date: # Check end_date is not None
+        try:
+            end_date = pd.to_datetime(end_date, errors='coerce').strftime('%Y%m%d')
+        except:
+            print("Error: Please try again with end_date entered in the format %Y%m%d.")
+        params['end_date'] = end_date
+
+    if query:
+        params['q'] = query
+
+    params['sort'] = sort
+    
+    articles_list = []
+    articles_df = pd.DataFrame()
+    
+    total_articles = 0
+    
+    for page in range(page_lower, page_upper):
+        if total_articles < max_articles:
+            sleep(1)
+            
+            params['page'] = page # Every page has 10 articles
+            if printout:
+                print("Page: ", page)
+
+            # Using NYT API to scrap articles
+            search_url = NYT_ARTICLE_API_URL + '?' + urlencode(params)
+            file = urlopen(search_url).read() # Get the articles search data and read it into a string
+            js = json.loads(file) # Load the articles search data as json
+
+            if js['status'] == 'OK':
+                docs = js['response']['docs']
+                docs_length = len(docs)
+                if docs_length==0:
+                    if printout:
+                        print("No articles found on page", page)
+                    break
+                for i in range(docs_length):
+                    article = docs[i]
+                    article_url = article['web_url'] # Get the url for the article
+                    if printout:
+                        print("Article url:", article_url)
+                    articles_list.append(article)
+                            
+    articles_df = pd.DataFrame(articles_list)
+    articles_df = preprocess_articles_dataframe(articles_df)
+        
+    if printout:
+        if page_lower > page_upper:
+            print("page_lower value is greater than the page_upper. No articles returned.")
+        elif (begin_date is not None) & (end_date is not None):
+            if begin_date>end_date:
+                print("begin_date is bigger than the end_date. No articles returned.")
+            else:
+                print("Total articles stored: ", articles_df.shape[0])
+        else:
+            print("Total articles stored: ", articles_df.shape[0])
+    if save:
+        articles_df.to_csv('Articles.csv')
+    return articles_df
 
 def get_replies(df):
     '''Extracts the replies to the comments and returns the dataframe
@@ -216,8 +284,6 @@ def preprocess_comments_dataframe(df):
     df.userTitle = df.userTitle.astype('category')
     df.userURL = df.userURL.astype('category')
     return df
-
-
 
 def preprocess_articles_dataframe(df): 
     '''Preprocesses the articles' dataframe'''
