@@ -138,9 +138,9 @@ def get_comments(article_url, save=False, printout=True):
         sleep(1) 
         url = COMMENTS_URL + article_url + '&offset='+str(offset)+'&sort=newest' 
         file = urlopen(url).read().decode() # Get the comments data and read it into a string
-        file=file.replace('NYTD.commentsInstance.drawComments(','')
-        file=file.replace('      /**/ ','')  
-        file=file[:-2] 
+        file = file.replace('NYTD.commentsInstance.drawComments(','')
+        file = file.replace('      /**/ ','')  
+        file = file[:-2] 
         js = json.loads(file) # Load the file as json
         if js['status'] == 'OK':
             results = js['results']
@@ -164,7 +164,6 @@ def get_comments(article_url, save=False, printout=True):
     if save:
         comments_df.to_csv('Comments.csv')
     return comments_df, total_comments
-
 
 def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, end_date=None, 
                  max_articles=100000, sort='newest', query=None, save=False, printout=True):
