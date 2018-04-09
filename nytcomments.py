@@ -10,6 +10,7 @@ import pandas as pd
 NYT_ARTICLE_API_URL = 'https://api.nytimes.com/svc/search/v2/articlesearch.json'
 COMMENTS_URL = 'http://www.nytimes.com/svc/community/V3/requestHandler?callback=NYTD.commentsInstance.drawComments&method=&cmd=GetCommentsAll&url='
 
+
 def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, end_date=None, 
                  max_comments=50000, sort='newest', query=None, save=False, printout=True):
     '''Collects the comments on the articles of NYT by first scraping the 
@@ -20,9 +21,15 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
     
     params = {'api-key': ARTICLE_API_KEY}
     
+    if page_lower<0:
+        page_lower = 0
+    
+    if page_upper>=200:
+        page_upper = 199
+    
     if sort=='oldest':
         if begin_date is None:
-            begin_date = '20081030'   
+            begin_date = '20081031'   
     elif end_date is None:
         end_date = datetime.today().strftime('%Y%m%d')
         
@@ -103,17 +110,20 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
             if begin_date>end_date:
                 print("begin_date is bigger than the end_date. No articles returned.")
             else:
+                print()
                 print("Total articles stored: ", articles_df.shape[0])
                 print("Total comments retrieved: ", comments_df.shape[0])
         else:
+            print()
             print("Total articles stored: ", articles_df.shape[0])
             print("Total comments retrieved: ", comments_df.shape[0])
     if save:
         articles_df.to_csv('Articles.csv')
         comments_df.to_csv('Comments.csv')
-    return articles_df, comments_df 
-        
-def get_comments(article_url):
+    return articles_df, comments_df
+ 
+    
+def get_comments(article_url, save=False, printout=True):
     '''Given the url of an articles from NYT, returns a dataframe of comments in that article'''
     
     article_url = article_url.replace(':','%253A') #convert the : to an HTML entity
@@ -143,13 +153,18 @@ def get_comments(article_url):
             else:
                 break # Break when no comments are returned
         offset = offset + 25 # Increment the counter since 25 comments are scraped each time
-    if total_comments: 
-        print('Retrieved ' + str(total_comments) + ' comments')
+        
+    if total_comments:
+        if printout:
+            print('Retrieved ' + str(total_comments) + ' comments')
         comments_df = pd.concat([df for df in df_list])
         comments_df.drop_duplicates(subset=['commentID'], inplace=True)
         comments_df['inReplyTo'] = None 
         comments_df = get_replies(comments_df)
+    if save:
+        comments_df.to_csv('Comments.csv')
     return comments_df, total_comments
+
 
 def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, end_date=None, 
                  max_articles=100000, sort='newest', query=None, save=False, printout=True):
@@ -157,6 +172,12 @@ def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, 
     articles' data and returns a pandas dataframe for articles.'''
     
     params = {'api-key': ARTICLE_API_KEY}
+    
+    if page_lower<0:
+        page_lower = 0
+    
+    if page_upper>=200:
+        page_upper = 199
     
     if sort=='oldest':
         if begin_date is None:
@@ -225,12 +246,15 @@ def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, 
             if begin_date>end_date:
                 print("begin_date is bigger than the end_date. No articles returned.")
             else:
+                print()
                 print("Total articles stored: ", articles_df.shape[0])
         else:
+            print()
             print("Total articles stored: ", articles_df.shape[0])
     if save:
         articles_df.to_csv('Articles.csv')
     return articles_df
+
 
 def get_replies(df):
     '''Extracts the replies to the comments and returns the dataframe
@@ -248,6 +272,7 @@ def get_replies(df):
             all_replies_df = get_replies(all_replies_df)
             df = pd.concat([df, all_replies_df])
     return df
+
 
 def preprocess_comments_dataframe(df): 
     '''Preprocesses the comments' dataframe'''
@@ -284,6 +309,7 @@ def preprocess_comments_dataframe(df):
     df.userTitle = df.userTitle.astype('category')
     df.userURL = df.userURL.astype('category')
     return df
+
 
 def preprocess_articles_dataframe(df): 
     '''Preprocesses the articles' dataframe'''
