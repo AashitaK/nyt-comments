@@ -10,3 +10,12 @@ Python 3.4+
 ### Python package required
 pandas
 
+### Use
+```python
+from nytcomments import get_dataset
+articles_df, comments_df = get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=2)
+```
+For more information, please refer to the [tutorial here](https://github.com/AashitaK/nyt-comments/blob/master/Tutorial.ipynb).
+
+
+
