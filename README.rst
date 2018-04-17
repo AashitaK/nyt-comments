@@ -6,8 +6,8 @@ The package scraps comments posted on New York Times articles and converts the d
 
 Dependencies
 ------------
-Python 3.4+
-pandas 
+* Python 3.4+
+* pandas 
 
 Usage
 -------
