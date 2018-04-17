@@ -102,11 +102,15 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                                     comments_df_list.append(comments)
                     HTTPError = False
                 except:
-                    print('HTTP Error encountered while retrieving URLs for the articles. Restarting the retrieval process from page {}.'.format(page))
                     HTTPErrorCount += 1
-                    if HTTPErrorCount > 3:
-                        print('HTTP Error encountered repeatedly. Terminating the retrival process.')
-                        break
+                    if HTTPErrorCount > 1:
+                        if printout:
+                            print('HTTP Error encountered again. Terminating the retrival process.')
+                            break
+                    else:
+                        if printout:
+                            print()
+                            print('HTTP Error encountered while retrieving URLs for the articles. Restarting the retrieval process from page {}.'.format(page))
                             
     if comments_df_list: # Check that the list is not empty
         comments_df = pd.concat([df for df in comments_df_list])
@@ -169,12 +173,16 @@ def get_comments(article_url, save=False, printout=True):
                 offset = offset + 25 # Increment the counter since 25 comments are scraped each time
                 HTTPError = False
             except:
-                print('HTTP Error encountered while retriving comments for the article with url {}. Restarting the retrival process for this article'.format(article_url))
                 HTTPErrorCount += 1
                 if HTTPErrorCount > 1:
-                    print('HTTP Error encountered repeatedly. Terminating the retrival process for this article.')
-                    print()
+                    if printout:
+                        print('HTTP Error encountered again. Terminating the retrival process for this article.')
+                        print()
                     break
+                else:
+                    if printout:
+                        print()
+                        print('HTTP Error encountered while retriving comments for the article with url {}. Restarting the retrival process for this article'.format(article_url))
         if HTTPErrorCount > 1:
             break
         
@@ -264,11 +272,16 @@ def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, 
                             articles_list.append(article)
                     HTTPError = False
                 except:
-                    print('HTTP Error encountered while retrieving URLs for the articles. Restarting the retrieval process from page {}.'.format(page))
                     HTTPErrorCount += 1
-                    if HTTPErrorCount > 3:
-                        print('HTTP Error encountered repeatedly. Terminating the retrival process.')
-                        break
+                    if HTTPErrorCount > 1:
+                        if printout:
+                            print('HTTP Error encountered again. Terminating the retrival process.')
+                            break
+                    else:
+                        if printout:
+                            print()
+                            print('HTTP Error encountered while retrieving URLs for the articles. Restarting the retrieval process from page {}.'.format(page))
+                            
                             
     articles_df = pd.DataFrame(articles_list)
     articles_df = preprocess_articles_dataframe(articles_df)
