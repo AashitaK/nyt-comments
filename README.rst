@@ -9,8 +9,9 @@ Python 3.4+
 pandas 
 
 Usage
-=========
+-------
 .. code:: python
+
   from nytcomments import get_dataset
   articles_df, comments_df = get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=2)
 
