@@ -65,38 +65,41 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
             params['page'] = page # Every page has 10 articles
             if printout:
                 print("Page: ", page)
+            try:
+                # Using NYT API to scrap articles
+                search_url = NYT_ARTICLE_API_URL + '?' + urlencode(params)
+                file = urlopen(search_url).read() # Get the articles search data and read it into a string
+                js = json.loads(file) # Load the articles search data as json
 
-            # Using NYT API to scrap articles
-            search_url = NYT_ARTICLE_API_URL + '?' + urlencode(params)
-            file = urlopen(search_url).read() # Get the articles search data and read it into a string
-            js = json.loads(file) # Load the articles search data as json
-
-            if js['status'] == 'OK':
-                docs = js['response']['docs']
-                docs_length = len(docs)
-                if docs_length==0:
-                    if printout:
-                        print("No aricles found on page", page)
-                    break
-                for i in range(docs_length):
-                    if docs[i]['document_type'] != 'multimedia': # Ignore multimedia articles
-                        article_url = docs[i]['web_url'] # Get the url for the article
-                        comments, number_comments = get_comments(article_url) # Use the article url to get comments 
-                        total_comments += number_comments
-                        if not comments.empty: # Check if the article has comments
-                            if printout:
-                                print("Article url:", article_url)
-                            article_id = docs[i]['_id']
-                            article = docs[i]
-                            articles_list.append(article)
-                            comments['articleID'] = article_id
-                            comments['sectionName'] = article.get('section_name', 'Unknown')
-                            comments['newDesk'] = article.get('new_desk', 'Unknown')
-                            comments['articleWordCount'] = article.get('word_count', 0)
-                            comments['printPage'] = article.get('print_page', 0)
-                            comments['typeOfMaterial'] = article.get('type_of_material', 'Unknown')
-                            comments = preprocess_comments_dataframe(comments)
-                            comments_df_list.append(comments)
+                if js['status'] == 'OK':
+                    docs = js['response']['docs']
+                    docs_length = len(docs)
+                    if docs_length==0:
+                        if printout:
+                            print("No aricles found on page", page)
+                        break
+                    for i in range(docs_length):
+                        if docs[i]['document_type'] != 'multimedia': # Ignore multimedia articles
+                            article_url = docs[i]['web_url'] # Get the url for the article
+                            comments, number_comments = get_comments(article_url) # Use the article url to get comments 
+                            total_comments += number_comments
+                            if not comments.empty: # Check if the article has comments
+                                if printout:
+                                    print("Article url:", article_url)
+                                article_id = docs[i]['_id']
+                                article = docs[i]
+                                articles_list.append(article)
+                                comments['articleID'] = article_id
+                                comments['sectionName'] = article.get('section_name', 'Unknown')
+                                comments['newDesk'] = article.get('new_desk', 'Unknown')
+                                comments['articleWordCount'] = article.get('word_count', 0)
+                                comments['printPage'] = article.get('print_page', 0)
+                                comments['typeOfMaterial'] = article.get('type_of_material', 'Unknown')
+                                comments = preprocess_comments_dataframe(comments)
+                                comments_df_list.append(comments)
+            except:
+                print('HTTP Error encountered midway. Retrieval terminated at page {}.'.format(page))
+                break
                             
     if comments_df_list: # Check that the list is not empty
         comments_df = pd.concat([df for df in comments_df_list])
@@ -118,8 +121,8 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
             print("Total articles stored: ", articles_df.shape[0])
             print("Total comments retrieved: ", comments_df.shape[0])
     if save:
-        articles_df.to_csv('Articles.csv')
-        comments_df.to_csv('Comments.csv')
+        articles_df.to_csv('Articles.csv', index=False)
+        comments_df.to_csv('Comments.csv', index=False)
     return articles_df, comments_df
  
     
@@ -135,24 +138,28 @@ def get_comments(article_url, save=False, printout=True):
     comments_df = pd.DataFrame() # Set up a list to store the comments' data 
 
     while True:
-        sleep(1) 
-        url = COMMENTS_URL + article_url + '&offset='+str(offset)+'&sort=newest' 
-        file = urlopen(url).read().decode() # Get the comments data and read it into a string
-        file = file.replace('NYTD.commentsInstance.drawComments(','')
-        file = file.replace('      /**/ ','')  
-        file = file[:-2] 
-        js = json.loads(file) # Load the file as json
-        if js['status'] == 'OK':
-            results = js['results']
-            total_comments_returned = results['totalCommentsReturned']
-            total_comments += total_comments_returned # Store the total number of comments
-            if total_comments_returned:
-                comments = results['comments']
-                df = pd.DataFrame(comments)
-                df_list.append(df)
-            else:
-                break # Break when no comments are returned
-        offset = offset + 25 # Increment the counter since 25 comments are scraped each time
+        try:
+            sleep(1) 
+            url = COMMENTS_URL + article_url + '&offset='+str(offset)+'&sort=newest' 
+            file = urlopen(url).read().decode() # Get the comments data and read it into a string
+            file = file.replace('NYTD.commentsInstance.drawComments(','')
+            file = file.replace('      /**/ ','')  
+            file = file[:-2] 
+            js = json.loads(file) # Load the file as json
+            if js['status'] == 'OK':
+                results = js['results']
+                total_comments_returned = results['totalCommentsReturned']
+                total_comments += total_comments_returned # Store the total number of comments
+                if total_comments_returned:
+                    comments = results['comments']
+                    df = pd.DataFrame(comments)
+                    df_list.append(df)
+                else:
+                    break # Break when no comments are returned
+            offset = offset + 25 # Increment the counter since 25 comments are scraped each time
+        except:
+            print('HTTP Error encountered midway. Retrieval terminated at page {}.'.format(page))
+            break
         
     if total_comments:
         if printout:
@@ -162,7 +169,7 @@ def get_comments(article_url, save=False, printout=True):
         comments_df['inReplyTo'] = None 
         comments_df = get_replies(comments_df)
     if save:
-        comments_df.to_csv('Comments.csv')
+        comments_df.to_csv('Comments.csv', index=False)
     return comments_df, total_comments
 
 def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, end_date=None, 
@@ -210,30 +217,34 @@ def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, 
     
     for page in range(page_lower, page_upper):
         if total_articles < max_articles:
-            sleep(1)
-            
-            params['page'] = page # Every page has 10 articles
-            if printout:
-                print("Page: ", page)
+            try: 
+                sleep(1)
 
-            # Using NYT API to scrap articles
-            search_url = NYT_ARTICLE_API_URL + '?' + urlencode(params)
-            file = urlopen(search_url).read() # Get the articles search data and read it into a string
-            js = json.loads(file) # Load the articles search data as json
+                params['page'] = page # Every page has 10 articles
+                if printout:
+                    print("Page: ", page)
 
-            if js['status'] == 'OK':
-                docs = js['response']['docs']
-                docs_length = len(docs)
-                if docs_length==0:
-                    if printout:
-                        print("No articles found on page", page)
-                    break
-                for i in range(docs_length):
-                    article = docs[i]
-                    article_url = article['web_url'] # Get the url for the article
-                    if printout:
-                        print("Article url:", article_url)
-                    articles_list.append(article)
+                # Using NYT API to scrap articles
+                search_url = NYT_ARTICLE_API_URL + '?' + urlencode(params)
+                file = urlopen(search_url).read() # Get the articles search data and read it into a string
+                js = json.loads(file) # Load the articles search data as json
+
+                if js['status'] == 'OK':
+                    docs = js['response']['docs']
+                    docs_length = len(docs)
+                    if docs_length==0:
+                        if printout:
+                            print("No articles found on page", page)
+                        break
+                    for i in range(docs_length):
+                        article = docs[i]
+                        article_url = article['web_url'] # Get the url for the article
+                        if printout:
+                            print("Article url:", article_url)
+                        articles_list.append(article)
+            except:
+                print('HTTP Error encountered midway. Retrieval terminated at page {}.'.format(page))
+                break
                             
     articles_df = pd.DataFrame(articles_list)
     articles_df = preprocess_articles_dataframe(articles_df)
@@ -251,7 +262,7 @@ def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, 
             print()
             print("Total articles stored: ", articles_df.shape[0])
     if save:
-        articles_df.to_csv('Articles.csv')
+        articles_df.to_csv('Articles.csv', index=False)
     return articles_df
 
 
