@@ -20,7 +20,7 @@ Please refer to the `tutorial here <https://github.com/AashitaK/nyt-comments/blo
 
 Acknowledgement
 ---------------
-* A part of code used in the function `get_comments` is inspired from the code written by `_Neal Caren <http://nealcaren.web.unc.edu/scraping-comments-from-the-new-york-times/>`_ with some modification.
+* A part of code used in the function `get_comments` is inspired from the code written by `Neal Caren <http://nealcaren.web.unc.edu/scraping-comments-from-the-new-york-times/>`_ with some modification.
 * NYT article search API is used for the article search.
 
 
