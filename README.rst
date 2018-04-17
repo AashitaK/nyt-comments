@@ -10,9 +10,9 @@ pandas
 
 Usage
 =========
-.. code::
-from nytcomments import get_dataset
-articles_df, comments_df = get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=2)
+.. code:: python
+  from nytcomments import get_dataset
+  articles_df, comments_df = get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=2)
 
 Please refer to the [tutorial here](https://github.com/AashitaK/nyt-comments/blob/master/Tutorial.ipynb) for illustration of the three functions `get_dataset`, `get_comments` and `get_articles` as well as detailed information about the function arguments. You must agree to the [Terms of Use](http://developer.nytimes.com/tou) for the NYT API to use the functions `get_dataset` and `get_articles` whereas `get_comments` can be used without NYT API key.
 
