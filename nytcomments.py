@@ -1,5 +1,7 @@
 from urllib.parse import urlencode
 from urllib.request import urlopen
+from urllib.error import HTTPError
+import sys
 import json
 
 from time import sleep
@@ -23,9 +25,17 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
     
     if page_lower<0:
         page_lower = 0
+        print('Out of range value passed for page_lower. The page_lower parameter is set to 0')
+        print()
     
-    if page_upper>=200:
-        page_upper = 199
+    if page_upper>200:
+        page_upper = 200
+        print('Out of range value passed for page_upper. The page_upper parameter is set to 199.')
+        print()
+        
+    if (sort!='newest') & (sort!='oldest'):
+        print('Invalid value passed for sort. The sort parameter is set to newest.')
+        print()
     
     if sort=='oldest':
         if begin_date is None:
@@ -60,6 +70,8 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
     
     total_comments = 0
     
+    HTTPErrorCount = 0
+    
     for page in range(page_lower, page_upper):
         if total_comments < max_comments:
             params['page'] = page # Every page has 10 articles
@@ -81,7 +93,8 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                     for i in range(docs_length):
                         if docs[i]['document_type'] != 'multimedia': # Ignore multimedia articles
                             article_url = docs[i]['web_url'] # Get the url for the article
-                            comments, number_comments = get_comments(article_url) # Use the article url to get comments 
+                            # Use the article url to get comments 
+                            comments, number_comments, error = get_comments(article_url, returnError=True) 
                             total_comments += number_comments
                             if not comments.empty: # Check if the article has comments
                                 if printout:
@@ -97,7 +110,39 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                                 comments['typeOfMaterial'] = article.get('type_of_material', 'Unknown')
                                 comments = preprocess_comments_dataframe(comments)
                                 comments_df_list.append(comments)
+                            if error:
+                                break
+                    if error:
+                        break
+            except KeyboardInterrupt:
+                if printout:
+                    print('KeyboardInterrupt: Retrieval interrupted.')
+                break
+            except ConnectionError:
+                if printout:
+                    print('ConnectionError: Retrieval interrupted.')
+                break
+            except SystemExit:
+                if printout:
+                    print('SystemExit: Retrieval interrupted.')
+                break
+            except HTTPError:
+                HTTPErrorCount += 1
+                if HTTPErrorCount < 5:
+                    if printout:
+                        print(sys.exc_info()[1], "Page {} is skipped. Retrival is continued from the next page.".format(page))
+                        print()
+                    pass
+                else:
+                    if printout:
+                        print(sys.exc_info()[1], "Retrival is terminated due to repeated HTTP errors.")
+                        print()
+                    break
             except:
+                if printout:
+                    print("Unexpected error:", sys.exc_info()[1])
+                    print("Page {} is skipped. Retrival is continued from the next page.".format(page))
+                    print()
                 pass
                             
     if comments_df_list: # Check that the list is not empty
@@ -125,7 +170,7 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
     return articles_df, comments_df
  
     
-def get_comments(article_url, save=False, printout=True):
+def get_comments(article_url, save=False, printout=True, returnError=False):
     '''Given the url of an articles from NYT, returns a dataframe of comments in that article'''
     
     url = article_url.replace(':','%253A') #convert the : to an HTML entity
@@ -135,7 +180,7 @@ def get_comments(article_url, save=False, printout=True):
     total_comments = 0 # Initialize the count of comments in the article 
     df_list = []
     comments_df = pd.DataFrame() # Set up a list to store the comments' data 
-
+    error = None
     while True:
         try:
             sleep(1) 
@@ -156,7 +201,35 @@ def get_comments(article_url, save=False, printout=True):
                 else:
                     break # Break when no comments are returned
             offset = offset + 25 # Increment the counter since 25 comments are scraped each time
+        except KeyboardInterrupt:
+            if returnError:
+                error = True
+            if printout:
+                print('KeyboardInterrupt: Retrieval interrupted.')
+            break
+        except ConnectionError:
+            if returnError:
+                error = True
+            if printout:
+                print('ConnectionError: Retrieval interrupted.')
+            break
+        except SystemExit:
+            if returnError:
+                error = True
+            if printout:
+                print('SystemExit: Retrieval interrupted.')
+            break
+        except HTTPError:
+            if printout:
+                print(sys.exc_info()[1], "Article with the URL {} is skipped. Retrival is continued from the next article.".format(article_url))
+                print()
+            break    
         except:
+            if printout:
+                print("Unexpected error:", sys.exc_info()[1])
+                if returnError:
+                    print("Article with the URL {} is skipped. Retrival is continued from the next article.".format(article_url))
+                    print()
             break
         
     if total_comments:
@@ -168,7 +241,10 @@ def get_comments(article_url, save=False, printout=True):
         comments_df = get_replies(comments_df)
     if save:
         comments_df.to_csv('Comments.csv', index=False)
-    return comments_df, total_comments
+    if returnError:
+        return comments_df, total_comments, error
+    else:
+        return comments_df, total_comments
 
 def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, end_date=None, 
                  max_articles=100000, sort='newest', query=None, save=False, printout=True):
@@ -240,7 +316,24 @@ def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, 
                         if printout:
                             article_url = article['web_url'] # Get the url for the article
                             print("Article url:", article_url)
+            except KeyboardInterrupt:
+                if printout:
+                    print('KeyboardInterrupt: Retrieval interrupted.')
+                break
+            
+            except ConnectionError:
+                if printout:
+                    print('ConnectionError: Retrieval interrupted.')
+                break
+            except SystemExit:
+                if printout:
+                    print('SystemExit: Retrieval interrupted.')
+                break
             except:
+                if printout:
+                    print("Unexpected error:", sys.exc_info()[0])
+                    print("Page {} is skipped. Retrival is continued from the next page.".format(page))
+                    print()
                 pass
                            
     articles_df = pd.DataFrame(articles_list)
