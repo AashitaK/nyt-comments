@@ -8,6 +8,7 @@ Dependencies
 ------------
 * Python 3.4+
 * pandas 
+* requests
 
 Usage
 -------
