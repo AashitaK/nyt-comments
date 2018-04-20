@@ -14,4 +14,8 @@ setup(name='nytcomments',
       author_email='kesar01@gmail.com',
       license='MIT',
       packages=['nytcomments'],
+      install_requires=[
+          'requests',
+          'pandas',
+      ],
       zip_safe=False)
