@@ -181,6 +181,7 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                             
     if comments_df_list: # Check that the list is not empty
         comments_df = pd.concat([df for df in comments_df_list])
+        comments_df = preprocess_comments_dataframe(comments_df)
         articles_df = pd.DataFrame(articles_list)
         articles_df = preprocess_articles_dataframe(articles_df)
         
