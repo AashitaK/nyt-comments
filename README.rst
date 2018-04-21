@@ -7,7 +7,7 @@ The package includes three main functions to perform three distinct tasks involv
 
 2. The function ``get_articles`` can be used as an API wrapper for NYT article search API. It returns the cleaned up and preprocessed data for articles as a ready-to-use pandas dataframe (with an option to store it in ``csv`` files). The retrieval can be customized with the same options as above and unlike the above function, it returns all the articles that satisfy the search criteria.
 
-3. The function ``get_comments`` retrieves the comments on an article given its url. It can be used as a substitute for the comments by url option in the NYT Community API that is now deprecated and only return comments that were picked as editor's selection on account of an `unresolved issue <https://github.com/NYTimes/public_api_specs/issues/29>`_. This function does not use NYT API for the retrieval unlike the above two.
+3. The function ``get_comments`` retrieves the comments on NYT article(s) given their urls. It can be used as a substitute for the comments by url option in the NYT Community API that is now deprecated and only return comments that were picked as editor's selection on account of an `unresolved issue <https://github.com/NYTimes/public_api_specs/issues/29>`_. This function does not use NYT API for the retrieval unlike the above two.
 
 Dependencies
 ------------
