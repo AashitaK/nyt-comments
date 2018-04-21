@@ -74,7 +74,7 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                                 article_url = docs[i]['web_url'] # Get the url for the article
 
                                 # Use the article url to get comments 
-                                comments, error = get_comments(article_url, internal=True) 
+                                comments, error = get_comments(article_url, printout=printout) 
                                 number_comments = comments.shape[0]
 
                                 if number_comments: # Check if the article has comments
@@ -160,23 +160,27 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
         articles_df.to_csv(os.path.join(path, 'Articles' + filename + '.csv', index=False))
         comments_df.to_csv(os.path.join(path, 'Comments' + filename + '.csv', index=False))
         if printout:
-            print("The articles'  and comments' data is stored as csv files - Articles{}.csv and Comments{}.csv.".format(filename, filename))
+            if path=="":
+                directory = os.getcwd()
+            else:
+                directory = path
+            print("The articles' and comments' data is stored as the csv files - Articles{}.csv and Comments{}.csv in the directory {}".format(filename, filename, directory))
     return articles_df, comments_df
  
     
-def get_comments(article_url, max_comment=5000, printout=True, save=False, filename="", path="", internal=False):
-    '''Given the url of an articles from NYT, returns a dataframe of comments in that article'''
+def retrieve_comments(article_url, printout=True):
+    '''Given the url of an article from NYT, returns a dataframe of comments in that article'''
     
     url = article_url.replace(':','%253A') #convert the : to an HTML entity
     url = url.replace('/','%252F')
     
     offset = 0 #Start off at the very beginning
-    total_comments = 0 # Initialize the count of comments in the article 
+    
     df_list = []
     comments_df = pd.DataFrame() # Set up a list to store the comments' data 
     error = None
     
-    while total_comments < max_comments:
+    while True:
         try:
             sleep(1) 
             params = {'sort': "newest", 'offset': offset, 'url': article_url}
@@ -196,22 +200,19 @@ def get_comments(article_url, max_comment=5000, printout=True, save=False, filen
                     break # Break when no comments are returned
             offset = offset + 25 # Increment the counter since 25 comments are scraped each time
         except KeyboardInterrupt:
-            if internal:
-                error = True
+            error = True
             if printout:
                 print('KeyboardInterrupt: Retrieval interrupted.')
                 print()
             break
         except ConnectionError:
-            if internal:
-                error = True
+            error = True
             if printout:
                 print('ConnectionError: Retrieval interrupted.')
                 print()
             break
         except SystemExit:
-            if internal:
-                error = True
+            error = True
             if printout:
                 print('SystemExit: Retrieval interrupted.')
                 print()
@@ -223,38 +224,81 @@ def get_comments(article_url, max_comment=5000, printout=True, save=False, filen
                 print()
             break    
         except JSONDecodeError:
-            if internal:
-                error = True
+            error = True
             if printout:
                 print('JSONDecodeError: Retrieval interrupted.')
                 print()
             break
         except:
-            if internal:
-                error = True
+            error = True
             if printout:
                 print(sys.exc_info()[0], sys.exc_info()[1])
             break
-    if total_comments:
+    if df_list:
         comments_df = pd.concat([df for df in df_list])
         comments_df.drop_duplicates(subset=['commentID'], inplace=True)
         comments_df['inReplyTo'] = None 
         comments_df = get_replies(comments_df)
+        
+    total_comments = comments_df.shape[0]
     
     if printout:
         print('Retrieved {} comments from the article with url: '.format(total_comments))
         print(article_url)
+
+    return comments_df, error
+
+
+def get_comments(article_urls, max_comment=5000, printout=True, save=False, filename="", path=""):
+    '''Given a URL or a list of URLs of New York Times articles, returns a dataframe of comments in the articles.'''
+    # Initializing all the required variables 
+    comments_df_list = []
+    comments_df = pd.DataFrame()
     
-    if internal:
-        return comments_df, error
+    total_comments = 0 # Initialize the count of comments in the articles
+    if type(article_urls) is str:
+        comments, _ = get_comments(article_urls, printout=printout) 
+        number_comments = comments.shape[0]
+
+        if number_comments: # Check if the article has comments
+            comments_df_list.append(comments)
+            total_comments += number_comments
     else:
-        if total_comments:
-            comments_df = preprocess_comments_dataframe(comments_df)
-        if save:
-            comments_df.to_csv(os.path.join(path, 'Comments' + filename + '.csv', index=False))
-            if printout:
-                print("The comments' data is stored as the csv file Comments{}.csv.".format(filename))
-        return comments_df
+        for article_url in article_urls:
+            if total_comments < max_comments:
+                comments, error = get_comments(article_url, printout=printout) 
+                number_comments = comments.shape[0]
+
+                if number_comments: # Check if the article has comments
+                    comments_df_list.append(comments)
+                    total_comments += number_comments
+                if error:
+                    break
+            else:
+                if printout:
+                    print('Maximum limit of {} for the comments have reached. Terminating retrieval.'.format(max_comments))
+                    print()
+                break
+            
+    if comments_df_list: # Check that the list is not empty
+        comments_df = pd.concat([df for df in comments_df_list])
+        comments_df = preprocess_comments_dataframe(comments_df)
+        
+    if printout:
+        print()
+        print("Total comments retrieved: ", comments_df.shape[0]) 
+        
+    if save:
+        comments_df.to_csv(os.path.join(path, 'Comments' + filename + '.csv', index=False))
+        if printout:
+            if path=="":
+                directory = os.getcwd()
+            else:
+                directory = path
+            print("The comments' data is stored as the csv file Comments{}.csv in the directory {}".format(filename, directory))
+
+    return comments_df
+        
 
 def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, end_date=None, 
                 sort='newest', query=None, filter_query=None, max_articles=10000,
@@ -353,8 +397,13 @@ def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, 
     if save:
         articles_df.to_csv(os.path.join(path, 'Articles' + filename + '.csv', index=False))
         if printout:
-            print("The articles' data is stored as the csv file - Articles{}.csv.".format(filename))
+            if path=="":
+                directory = os.getcwd()
+            else:
+                directory = path
+            print("The articles' data is stored as the csv file - Articles{}.csv in the directory {}".format(filename, directory))
     return articles_df
+
 
 def set_parameters(ARTICLE_API_KEY, page_lower, page_upper, begin_date, end_date, 
                     sort, query, filter_query):
@@ -426,3 +475,4 @@ def set_parameters(ARTICLE_API_KEY, page_lower, page_upper, begin_date, end_date
         params['fq'] = filter_query
         
     return params, Error
+
