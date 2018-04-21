@@ -3,9 +3,9 @@ nyt-comments
 
 The package includes three main functions to perform three distinct tasks involving the retrieval of comments' and articles' from New York Times as ready-to-use dataset for data science/machine learning projects:
 
-1. The main function ``get_dataset`` returns two dataframes - one each for the articles and the comments on them. The retrieval can be customized based on a number of parameters such as a specific timeline, search queries, etc for the articles. The function only returns the articles that have comments on them.   
+1. The main function ``get_dataset`` returns two dataframes - one each for the articles and the comments on them. The retrieval can be customized based on a number of parameters such as a specific timeline, search queries, etc for the articles. The function returns only the articles that have comments on them.   
 
-2. The function ``get_articles`` can be used as an API wrapper for NYT article search API. It returns the cleaned up and preprocessed data for articles as a ready-to-use pandas dataframe (with an option to store it in ``csv`` files). The retrieval can be customized with the same options as above and the funtion returns all the articles that satisfy the search criteria.
+2. The function ``get_articles`` can be used as an API wrapper for NYT article search API. It returns the cleaned up and preprocessed data for articles as a ready-to-use pandas dataframe (with an option to store it in ``csv`` files). The retrieval can be customized with the same options as above and unlike the above function, it returns all the articles that satisfy the search criteria.
 
 3. The function ``get_comments`` retrieves the comments on an article given its url. It can be used as a substitute for the comments by url option in the NYT Community API that is now deprecated and only return comments that were picked as editor's selection on account of an `unresolved issue <https://github.com/NYTimes/public_api_specs/issues/29>`_. The above two functions use NYT API for the retrieval whereas this function does not.
 
