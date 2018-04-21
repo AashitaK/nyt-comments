@@ -74,7 +74,7 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                                 article_url = docs[i]['web_url'] # Get the url for the article
 
                                 # Use the article url to get comments 
-                                comments, error = get_comments(article_url, printout=printout) 
+                                comments, error = retrieve_comments(article_url, printout=printout) 
                                 number_comments = comments.shape[0]
 
                                 if number_comments: # Check if the article has comments
@@ -88,7 +88,6 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                                     comments['articleWordCount'] = article.get('word_count', 0)
                                     comments['printPage'] = article.get('print_page', 0)
                                     comments['typeOfMaterial'] = article.get('type_of_material', 'Unknown')
-                                    comments = preprocess_comments_dataframe(comments)
                                     comments_df_list.append(comments)
                                     total_comments += number_comments
                                 if error:
@@ -240,11 +239,11 @@ def retrieve_comments(article_url, printout=True):
         comments_df['inReplyTo'] = None 
         comments_df = get_replies(comments_df)
         
-    total_comments = comments_df.shape[0]
+        total_comments = comments_df.shape[0]
     
-    if printout:
-        print('Retrieved {} comments from the article with url: '.format(total_comments))
-        print(article_url)
+        if printout:
+            print('Retrieved {} comments from the article with url: '.format(total_comments))
+            print(article_url)
 
     return comments_df, error
 
@@ -257,7 +256,7 @@ def get_comments(article_urls, max_comment=5000, printout=True, save=False, file
     
     total_comments = 0 # Initialize the count of comments in the articles
     if type(article_urls) is str:
-        comments, _ = get_comments(article_urls, printout=printout) 
+        comments, _ = retrieve_comments(article_urls, printout=printout) 
         number_comments = comments.shape[0]
 
         if number_comments: # Check if the article has comments
@@ -266,7 +265,7 @@ def get_comments(article_urls, max_comment=5000, printout=True, save=False, file
     else:
         for article_url in article_urls:
             if total_comments < max_comments:
-                comments, error = get_comments(article_url, printout=printout) 
+                comments, error = retrieve_comments(article_url, printout=printout) 
                 number_comments = comments.shape[0]
 
                 if number_comments: # Check if the article has comments
@@ -464,8 +463,14 @@ def set_parameters(ARTICLE_API_KEY, page_lower, page_upper, begin_date, end_date
     
     if sort=='newest':
         if end_date is None:
-            end_date = datetime.today().strftime('%Y%m%d')      
+            if begin_date:
+                sort = 'oldest'
+            else:
+                end_date = datetime.today().strftime('%Y%m%d')      
     elif begin_date is None:
+        if end_date:
+            sort = 'newest'
+        else:
             begin_date = '20081031' 
 
     if query:

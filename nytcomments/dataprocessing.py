@@ -23,37 +23,51 @@ def preprocess_comments_dataframe(df):
     '''Preprocesses the comments' dataframe.'''
     
     df.reset_index(inplace=True, drop=True)
-    df.drop(['replies'], inplace=True, axis=1)
+    if 'replies' in df.columns:
+        df.drop(['replies'], inplace=True, axis=1)
     
     # Specify dtypes:
     df.approveDate = df.approveDate.astype('int64')
+    
     if 'articleID' in df.columns:
         df.articleID = df.articleID.astype('category')
+        
+    if 'articleWordCount' in df.columns:
+        df.articleWordCount = df.articleWordCount.fillna(0)
+        
     df.commentID = df.commentID.astype('category')
     df.commentTitle = df.commentTitle.astype('category')
     df.commentType = df.commentType.astype('category')
     df.createDate = df.createDate.astype('int64')
     df.inReplyTo = df.inReplyTo.fillna(0).astype('int32')
+    
     if 'newDesk' in df.columns:
-        df.newDesk = df.newDesk.astype('category')
+        df.newDesk = df.newDesk.fillna('Unknown').astype('category')
+        
     df.parentID = df.parentID.fillna(0).astype('category')
     df.parentUserDisplayName = df.parentUserDisplayName.astype('category')
     df.permID = df.permID.astype('category')
     df.picURL = df.picURL.astype('category')
+    
     if 'printPage' in df.columns:
-        df.printPage = df.printPage.astype('int32')
+        df.printPage = df.printPage.fillna(0).astype('int32')
+        
     df.recommendations = df.recommendations.astype('int64')
     df.recommendedFlag  = df.recommendedFlag.astype('category')
     df.replyCount = df.replyCount.astype('int32')
     df.reportAbuseFlag = df.reportAbuseFlag.astype('category')
+    
     if 'sectionName' in df.columns:
-        df.sectionName = df.sectionName.astype('category')
+        df.sectionName = df.sectionName.fillna('Unknown').astype('category')
+        
     df.sharing = df.sharing.astype('category').cat.codes
     df.status = df.status.astype('category')
     df.timespeople = df.timespeople.astype('category').cat.codes
     df.trusted = df.trusted.astype('category').cat.codes
+    
     if 'type_of_material' in df.columns:
-        df.type_of_material = df.type_of_material.astype('category')
+        df.type_of_material = df.type_of_material.fillna('Unknown').astype('category')
+        
     df.updateDate = df.updateDate.astype('int64')
     df.userDisplayName = df.userDisplayName.astype('category')
     df.userID = df.userID.astype('category')#.cat.codes
