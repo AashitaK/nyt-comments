@@ -1,8 +1,9 @@
 import pandas as pd
 
 def get_replies(df):
-    '''Extracts the replies to the comments and returns the dataframe
-    including the replies as comments'''
+    '''Extracts the replies to the comments as well as the nested 
+    replies to those replies, adds all of them to the orginal dataframe
+    and returns the dataframe.'''
     
     if 'replyCount' in df.columns:
         selected_df = df.loc[df.replyCount>0]
@@ -19,10 +20,11 @@ def get_replies(df):
 
 
 def preprocess_comments_dataframe(df): 
-    '''Preprocesses the comments' dataframe'''
+    '''Preprocesses the comments' dataframe.'''
     
     df.reset_index(inplace=True, drop=True)
     df.drop(['replies'], inplace=True, axis=1)
+    
     # Specify dtypes:
     df.approveDate = df.approveDate.astype('int64')
     df.articleID = df.articleID.astype('category')
@@ -56,7 +58,7 @@ def preprocess_comments_dataframe(df):
 
 
 def preprocess_articles_dataframe(df): 
-    '''Preprocesses the articles' dataframe'''
+    '''Preprocesses the articles' dataframe.'''
     
     df.reset_index(inplace=True, drop=True)
     df.drop(['blog', 'score', 'uri'], axis=1, inplace=True)
