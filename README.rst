@@ -1,8 +1,10 @@
 nyt-comments
 ******************************
 
-The package scraps comments posted on New York Times articles and converts the data into ``pandas`` dataframes (with an option to directly store it in ``csv`` files). The main function ``get_dataset`` returns two dataframes - one each for the articles and the comments that are cleaned up and preprocessed to be used as a dataset for data science/machine learning projects. The retrieval of the comments can be customized based on a number of parameters such as a specific timeline, search queries, etc for the articles. The second function ``get_articles``, that returns only articles, can be used as an API wrapper for NYT article search API to get the results processed as a ready-to-use pandas dataframe (with an option to store it in ``csv`` files). The third function ``get_comments``, that retrieves the comments on an article given its url, can be used as a substitute for the comments by url option in the NYT Community API that is now deprecated and only return comments that were picked as editor's selection on account of an `unresolved issue <https://github.com/NYTimes/public_api_specs/issues/29>`_.
-
+The package includes three main functions to perform three distinct tasks involving the retrieval of comments' and articles' from New York Times as ready-to-use dataset for data science/machine learning projects:
+1. The main function ``get_dataset`` returns two dataframes - one each for the articles and the comments that are . The retrieval of the comments can be customized based on a number of parameters such as a specific timeline, search queries, etc for the articles. 
+2. The function ``get_articles`` can be used as an API wrapper for NYT article search API. It that returns the cleaned up and preprocessed data for articles as a ready-to-use pandas dataframe (with an option to store it in ``csv`` files). 
+3. The function ``get_comments`` retrieves the comments on an article given its url. It can be used as a substitute for the comments by url option in the NYT Community API that is now deprecated and only return comments that were picked as editor's selection on account of an `unresolved issue <https://github.com/NYTimes/public_api_specs/issues/29>`_.
 
 Dependencies
 ------------
