@@ -18,7 +18,7 @@ COMMENTS_URL = 'http://www.nytimes.com/svc/community/V3/requestHandler?callback=
 
     
 def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, end_date=None, 
-                sort='newest', query=None, filter_query=None, max_comments=50000, max_articles=10000,
+                sort='newest', query=None, filter_query=None, max_comments=100000, max_articles=10000,
                 printout=True, save=False, filename="", path=""):
     '''Collects the comments on the articles of NYT by first scraping the 
     articles using NYT articles search API, calling on the customized function
@@ -58,7 +58,7 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                     # Check whether API rate limit has exceeded
                     if js.get('message'):
                         if printout:
-                            print(js.get('message')+'for today. No more comments can be retrieved using the article search today, however the function get_comments can be used to retrieve further comments w/o limit if the URLs of the articles are given to the function manually.')
+                            print(js.get('message') + ' for today. No more comments can be retrieved using the article search today, however the function get_comments can be used to retrieve further comments w/o limit if the list of URL(s) of the article(s) are provided to the function.')
                         break
 
                     # Check status to make sure data is retrieved correctly

@@ -35,7 +35,7 @@ def preprocess_comments_dataframe(df):
     if 'articleWordCount' in df.columns:
         df.articleWordCount = df.articleWordCount.fillna(0)
         
-    df.commentID = df.commentID.astype('category')
+    df.commentID = df.commentID.astype('int32')
     df.commentTitle = df.commentTitle.astype('category')
     df.commentType = df.commentType.astype('category')
     df.createDate = df.createDate.astype('int64')
@@ -52,9 +52,9 @@ def preprocess_comments_dataframe(df):
     if 'printPage' in df.columns:
         df.printPage = df.printPage.fillna(0).astype('int32')
         
-    df.recommendations = df.recommendations.astype('int64')
+    df.recommendations = df.recommendations.astype('int16')
     df.recommendedFlag  = df.recommendedFlag.astype('category')
-    df.replyCount = df.replyCount.astype('int32')
+    df.replyCount = df.replyCount.astype('int8')
     df.reportAbuseFlag = df.reportAbuseFlag.astype('category')
     
     if 'sectionName' in df.columns:
