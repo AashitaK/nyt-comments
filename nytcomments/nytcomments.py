@@ -58,6 +58,7 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                     # Check whether API rate limit has exceeded
                     if js.get('message'):
                         if printout:
+                            print()
                             print(js.get('message') + ' for today. No more comments can be retrieved using the article search today, however the function get_comments can be used to retrieve further comments w/o limit if the list of URL(s) of the article(s) are provided to the function.')
                         break
 
@@ -113,7 +114,7 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                     HTTPErrorCount += 1
                     if HTTPErrorCount < 5:
                         if printout:
-                            print(sys.exc_info()[1])
+                            print('HTTPError:', sys.exc_info()[1])
                             print("Page {} is skipped. Retrival is continued from the next page.".format(page))
                             print()
                         pass
@@ -177,7 +178,7 @@ def retrieve_comments(article_url, printout=True):
     
     df_list = []
     comments_df = pd.DataFrame() # Set up a list to store the comments' data 
-    error = None
+    error = False
     
     while True:
         try:
