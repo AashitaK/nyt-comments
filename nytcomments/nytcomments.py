@@ -249,7 +249,7 @@ def retrieve_comments(article_url, printout=True):
     return comments_df, error
 
 
-def get_comments(article_urls, max_comment=5000, printout=True, save=False, filename="", path=""):
+def get_comments(article_urls, max_comment=50000, printout=True, save=False, filename="", path=""):
     '''Given a URL or a list of URLs of New York Times articles, returns a dataframe of comments in the articles.'''
     # Initializing all the required variables 
     comments_df_list = []
@@ -436,6 +436,30 @@ def set_parameters(ARTICLE_API_KEY, page_lower, page_upper, begin_date, end_date
             print('Out of range value passed for page_upper. The page_upper parameter is set to 199.')
             print()
  
+        
+    if (sort!='newest') & (sort!='oldest'):
+        sort='newest'
+        if printout:
+            print('Invalid value passed for sort. The sort parameter is set to newest.')
+            print()
+    
+    params['sort'] = sort
+    
+    if sort=='latest':
+        sort = 'newest'
+    
+    if sort=='newest':
+        if end_date is None:
+            if begin_date:
+                sort = 'oldest'
+            else:
+                end_date = datetime.today().strftime('%Y%m%d')      
+    elif begin_date is None:
+        if end_date:
+            sort = 'newest'
+        else:
+            begin_date = '20081031' 
+            
     if begin_date: # Check begin_date is not None
         try:
             begin_date = pd.to_datetime(begin_date, errors='coerce').strftime('%Y%m%d')
@@ -454,26 +478,6 @@ def set_parameters(ARTICLE_API_KEY, page_lower, page_upper, begin_date, end_date
             return params, Error
         params['end_date'] = end_date
         
-    if (sort!='newest') & (sort!='oldest'):
-        sort='newest'
-        if printout:
-            print('Invalid value passed for sort. The sort parameter is set to newest.')
-            print()
-    
-    params['sort'] = sort
-    
-    if sort=='newest':
-        if end_date is None:
-            if begin_date:
-                sort = 'oldest'
-            else:
-                end_date = datetime.today().strftime('%Y%m%d')      
-    elif begin_date is None:
-        if end_date:
-            sort = 'newest'
-        else:
-            begin_date = '20081031' 
-
     if query:
         params['q'] = query
         
