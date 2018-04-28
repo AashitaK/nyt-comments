@@ -24,7 +24,7 @@ Usage
 
 Please refer to the `tutorial here <https://github.com/AashitaK/nyt-comments/blob/master/Tutorial.ipynb>`_ for illustration of the three functions ``get_dataset``, ``get_comments`` and ``get_articles`` as well as detailed information about the function arguments. The functions ``get_dataset`` and ``get_articles`` requires the use of NYT API key that can be obtained by registering at the `NYT developers' site <http://developer.nytimes.com/signup>`_ whereas ``get_comments`` can be used without the API key. You must agree to the `Terms of Use <http://developer.nytimes.com/tou>`_ for the NYT article search API to use the key.
 
-Note : The dataset of comments posted on NYT articles in the period Jan - May 2017 and Jan 01 - April 15, 2018 is `available on Kaggle <https://www.kaggle.com/aashita/nyt-comments>`_ and is at the top among the `20 featured datsets <https://www.kaggle.com/datasets>`_  as of April 28, 2018.
+Note : The dataset of comments posted on NYT articles in the period Jan - May 2017 and Jan 01 - April 15, 2018 is `available on Kaggle <https://www.kaggle.com/aashita/nyt-comments>`_ and is at the `top among the 20 featured datsets <https://www.kaggle.com/datasets>`_  as of April 28, 2018.
 
 Acknowledgement
 ---------------
