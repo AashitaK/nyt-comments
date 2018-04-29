@@ -249,7 +249,7 @@ def retrieve_comments(article_url, printout=True):
     return comments_df, error
 
 
-def get_comments(article_urls, max_comment=50000, printout=True, save=False, filename="", path=""):
+def get_comments(article_urls, max_comments=50000, printout=True, save=False, filename="", path=""):
     '''Given a URL or a list of URLs of New York Times articles, returns a dataframe of comments in the articles.'''
     # Initializing all the required variables 
     comments_df_list = []
