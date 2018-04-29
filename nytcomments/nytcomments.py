@@ -137,12 +137,12 @@ def get_dataset(ARTICLE_API_KEY, page_lower=0, page_upper=30, begin_date=None, e
                     pass
             else:
                 if printout:
-                    print('Maximum limit of {} for the comments have reached. Terminating retrieval.'.format(max_comments))
+                    print('Maximum limit of {} for the comments have exceeded. Terminating retrieval.'.format(max_comments))
                     print()
                 break
         else:
             if printout:
-                print('Maximum limit of {} for the articles have reached. Terminating retrieval.'.format(max_articles))
+                print('Maximum limit of {} for the articles have exceeded. Terminating retrieval.'.format(max_articles))
                 print()
             break
             
@@ -276,7 +276,7 @@ def get_comments(article_urls, max_comments=50000, printout=True, save=False, fi
                     break
             else:
                 if printout:
-                    print('Maximum limit of {} for the comments have reached. Terminating retrieval.'.format(max_comments))
+                    print('Maximum limit of {} for the comments have exceeded. Terminating retrieval.'.format(max_comments))
                     print()
                 break
             
@@ -386,7 +386,7 @@ def get_articles(ARTICLE_API_KEY, page_lower=0, page_upper=50, begin_date=None, 
                 pass
         else:
             if printout:
-                print('Maximum limit of {} for the articles have reached. Terminating retrieval.'.format(max_articles))
+                print('Maximum limit of {} for the articles have exceeded. Terminating retrieval.'.format(max_articles))
             break
     articles_df = pd.DataFrame(articles_list)
     articles_df = preprocess_articles_dataframe(articles_df)
