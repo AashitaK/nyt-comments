@@ -11,7 +11,7 @@ from json.decoder import JSONDecodeError
 
 import pandas as pd
 
-from dataprocessing import get_replies, preprocess_comments_dataframe, preprocess_articles_dataframe
+from nytcomments.dataprocessing import get_replies, preprocess_comments_dataframe, preprocess_articles_dataframe
 
 NYT_ARTICLE_API_URL = 'https://api.nytimes.com/svc/search/v2/articlesearch.json'
 COMMENTS_URL = 'http://www.nytimes.com/svc/community/V3/requestHandler?callback=NYTD.commentsInstance.drawComments&method=&cmd=GetCommentsAll&url='
